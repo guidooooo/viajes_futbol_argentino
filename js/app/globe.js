@@ -6,6 +6,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ESTADIOS } from '../data/estadios.js';
 
+// Detectar entorno
+const isGitHubPages = window.location.hostname.includes('github.io');
+
 // Configuracion
 const CONFIG = {
     globeRadius: 1,
@@ -89,10 +92,11 @@ function getColorByViaje(viaje) {
 let planeTexture = null;
 let busTexture = null;
 const textureLoader = new THREE.TextureLoader();
-textureLoader.load('/img/avion.jpeg', (texture) => {
+const imgPath = isGitHubPages ? 'img/' : '/img/';
+textureLoader.load(imgPath + 'avion.jpeg', (texture) => {
     planeTexture = texture;
 });
-textureLoader.load('/img/bus-icon-vector.jpg', (texture) => {
+textureLoader.load(imgPath + 'bus-icon-vector.jpg', (texture) => {
     busTexture = texture;
 });
 
@@ -392,7 +396,7 @@ function addPartidoToTable(evento) {
             v.tipo === 'vuelta' && v.fechaNum === evento.fechaNum && v.torneo === evento.torneo
         );
         resultado = viajeVuelta?.resultado || 'empate';
-        const vehiculoImg = evento.distanciaKm >= 200 ? '/img/avion.jpeg' : '/img/bus-icon-vector.jpg';
+        const vehiculoImg = imgPath + (evento.distanciaKm >= 200 ? 'avion.jpeg' : 'bus-icon-vector.jpg');
         vehiculoHtml = `<img src="${vehiculoImg}" class="vehiculo-icon">`;
     }
 
@@ -679,10 +683,18 @@ function iniciarVisualizacion(equipoCodigo, viajes) {
 
 // Inicializacion
 document.addEventListener('DOMContentLoaded', () => {
-    const pathParts = window.location.pathname.split('/');
-    const equipoCodigo = pathParts[pathParts.length - 1];
+    // Obtener codigo segun entorno
+    let equipoCodigo;
+    if (isGitHubPages) {
+        const urlParams = new URLSearchParams(window.location.search);
+        equipoCodigo = urlParams.get('codigo');
+    } else {
+        const pathParts = window.location.pathname.split('/');
+        equipoCodigo = pathParts[pathParts.length - 1];
+    }
 
-    fetch('/js/data/viajes.json')
+    const jsonPath = isGitHubPages ? 'js/data/viajes.json' : '/js/data/viajes.json';
+    fetch(jsonPath)
         .then(res => res.json())
         .then(viajes => {
             if (viajes[equipoCodigo]) {
