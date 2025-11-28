@@ -19,10 +19,6 @@
     <script type="module">
         import { ESTADIOS } from '/js/data/estadios.js';
 
-        // Detectar entorno: GitHub Pages usa rutas relativas con query params
-        const isGitHubPages = window.location.hostname.includes('github.io');
-
-        // Generar grid de equipos
         const grid = document.getElementById('equipos-grid');
 
         // Ordenar por nombre corto
@@ -31,8 +27,7 @@
 
         equipos.forEach(([codigo, datos]) => {
             const card = document.createElement('a');
-            // GitHub Pages: equipo.html?codigo=XXX | Local: /equipo/XXX
-            card.href = isGitHubPages ? `equipo.html?codigo=${codigo}` : `/equipo/${codigo}`;
+            card.href = `/equipo/${codigo}`;
             card.className = 'equipo-card';
             card.innerHTML = `
                 <span class="codigo">${codigo}</span>
