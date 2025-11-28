@@ -27,7 +27,9 @@ let currentViaje = 0;
 let isPaused = false;
 let currentAnimationId = null;
 let currentVehicle = null;
+let currentHomeIcon = null;
 let pendingTimeout = null;
+let equipoLocalCodigo = null;
 
 // Estadisticas por tipo de partido
 const stats = {
@@ -85,9 +87,10 @@ function getColorByViaje(viaje) {
     return 0xff3333; // rojo (derrota)
 }
 
-// Texturas del vehiculo (cargadas una vez)
+// Texturas (cargadas una vez)
 let planeTexture = null;
 let busTexture = null;
+let homeTexture = null;
 const textureLoader = new THREE.TextureLoader();
 const imgPath = '/img/';
 textureLoader.load(imgPath + 'avion.jpeg', (texture) => {
@@ -95,6 +98,9 @@ textureLoader.load(imgPath + 'avion.jpeg', (texture) => {
 });
 textureLoader.load(imgPath + 'bus-icon-vector.jpg', (texture) => {
     busTexture = texture;
+});
+textureLoader.load(imgPath + 'home.png', (texture) => {
+    homeTexture = texture;
 });
 
 // Crear vehiculo (sprite con imagen: bus < 200km, avion >= 200km)
@@ -111,6 +117,42 @@ function createVehicle(color, distanciaKm) {
     sprite.scale.set(CONFIG.planeSize * 2, CONFIG.planeSize * 2, 1);
 
     return sprite;
+}
+
+// Mostrar icono de casa sobre el estadio local
+function showHomeIcon(resultado) {
+    if (!homeTexture || !equipoLocalCodigo) return;
+
+    const equipo = ESTADIOS[equipoLocalCodigo];
+    const pos = latLonToVector3(equipo.lat, equipo.lon, CONFIG.globeRadius + CONFIG.pinHeight + 0.015);
+
+    // Color segun resultado
+    let color;
+    if (resultado === 'victoria') color = 0x00cc66;
+    else if (resultado === 'empate') color = 0xffcc00;
+    else color = 0xff3333;
+
+    const material = new THREE.SpriteMaterial({
+        map: homeTexture,
+        color: color,
+        sizeAttenuation: true,
+        transparent: true
+    });
+
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(CONFIG.planeSize * 3, CONFIG.planeSize * 3, 1);
+    sprite.position.copy(pos);
+
+    scene.add(sprite);
+    currentHomeIcon = sprite;
+}
+
+// Ocultar icono de casa
+function hideHomeIcon() {
+    if (currentHomeIcon) {
+        scene.remove(currentHomeIcon);
+        currentHomeIcon = null;
+    }
 }
 
 // Crear arco con animacion progresiva y vehiculo
@@ -640,10 +682,12 @@ function startViajesSequence() {
     updateControlButtons();
 
     if (evento.tipo === 'local') {
-        // Partido de local: agregar a tabla y esperar 2s
+        // Partido de local: mostrar icono, agregar a tabla y esperar 2s
         updateLocalInfo(evento);
         addPartidoToTable(evento);
+        showHomeIcon(evento.resultado);
         pendingTimeout = setTimeout(() => {
+            hideHomeIcon();
             pendingTimeout = null;
             currentViaje++;
             startViajesSequence();
@@ -660,6 +704,7 @@ function startViajesSequence() {
 // Funcion principal
 function iniciarVisualizacion(equipoCodigo, viajes) {
     viajesData = viajes;
+    equipoLocalCodigo = equipoCodigo;
 
     const equipo = ESTADIOS[equipoCodigo];
     document.title = `Viajes - ${equipo.nombreCorto}`;
