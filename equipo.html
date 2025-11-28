@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viajes - Equipo</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="globe-container" id="globe-container"></div>
+
+    <div class="info-panel">
+        <h2 id="equipo-nombre">Cargando...</h2>
+        <div class="stats">
+            <div class="stat-row">
+                <span>Viajes:</span>
+                <span class="stat-value" id="total-viajes">-</span>
+            </div>
+            <div class="stat-row">
+                <span>Distancia total:</span>
+                <span class="stat-value" id="distancia-total">-</span>
+            </div>
+        </div>
+
+        <div class="viaje-actual" id="viaje-info" style="display: none;">
+            <div class="label">Viaje actual</div>
+            <div class="destino" id="viaje-destino">-</div>
+            <div class="distancia" id="viaje-distancia">-</div>
+            <div class="fecha" id="viaje-fecha">-</div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-restart" title="Reiniciar">⏮</button>
+            <button id="btn-prev" title="Anterior">⏪</button>
+            <button id="btn-pause" title="Pausar">⏸</button>
+            <button id="btn-next" title="Siguiente">⏩</button>
+            <button id="btn-end" title="Ir al final">⏭</button>
+        </div>
+
+        <a href="/" class="back-link">Volver al selector</a>
+    </div>
+
+    <!-- Tabla de estadisticas -->
+    <div class="stats-panel" id="stats-panel">
+        <div class="stats-header">Estadísticas</div>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="col-g">G</th>
+                    <th class="col-e">E</th>
+                    <th class="col-p">P</th>
+                    <th class="col-km">km</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="tipo-label"><span class="local-icon">L</span> Local</td>
+                    <td id="local-g">0</td>
+                    <td id="local-e">0</td>
+                    <td id="local-p">0</td>
+                    <td class="km-value">-</td>
+                </tr>
+                <tr>
+                    <td class="tipo-label"><img src="/img/avion.jpeg" class="vehiculo-icon"> Avión</td>
+                    <td id="avion-g">0</td>
+                    <td id="avion-e">0</td>
+                    <td id="avion-p">0</td>
+                    <td id="avion-km" class="km-value">0</td>
+                </tr>
+                <tr>
+                    <td class="tipo-label"><img src="/img/bus-icon-vector.jpg" class="vehiculo-icon"> Bus</td>
+                    <td id="bus-g">0</td>
+                    <td id="bus-e">0</td>
+                    <td id="bus-p">0</td>
+                    <td id="bus-km" class="km-value">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tabla de partidos -->
+    <div class="partidos-panel" id="partidos-panel">
+        <div class="partidos-header">Partidos</div>
+        <div class="partidos-table-container">
+            <table class="partidos-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Torneo</th>
+                        <th>F</th>
+                        <th>Rival</th>
+                        <th>R</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="partidos-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- App -->
+    <script type="module" src="/js/app/globe.js"></script>
+</body>
+</html>

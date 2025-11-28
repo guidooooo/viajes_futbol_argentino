@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viajes Futbol Argentino</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Viajes del Futbol Argentino</h1>
+        <p class="subtitle">Visualiza los viajes de visitante de cada equipo en 3D</p>
+
+        <div class="equipos-grid" id="equipos-grid">
+            <!-- Se llena dinamicamente -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { ESTADIOS } from '/js/data/estadios.js';
+
+        // Generar grid de equipos
+        const grid = document.getElementById('equipos-grid');
+
+        // Ordenar por nombre corto
+        const equipos = Object.entries(ESTADIOS)
+            .sort((a, b) => a[1].nombreCorto.localeCompare(b[1].nombreCorto));
+
+        equipos.forEach(([codigo, datos]) => {
+            const card = document.createElement('a');
+            card.href = `/equipo/${codigo}`;
+            card.className = 'equipo-card';
+            card.innerHTML = `
+                <span class="codigo">${codigo}</span>
+                <span class="nombre">${datos.nombreCorto}</span>
+                <span class="ciudad">${datos.ciudad}</span>
+            `;
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>
