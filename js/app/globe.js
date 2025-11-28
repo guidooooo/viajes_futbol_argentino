@@ -6,6 +6,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ESTADIOS } from '../data/estadios.js';
 
+// Escudos con extension webp
+const escudosWebp = ['CCO', 'EST', 'ROS', 'TAL'];
+
 // Configuracion
 const CONFIG = {
     globeRadius: 1,
@@ -414,30 +417,40 @@ function addStat(evento, resultado) {
     updateStatsTable();
 }
 
+// Obtener extension de escudo
+function getEscudoExt(codigo) {
+    return escudosWebp.includes(codigo) ? 'webp' : 'png';
+}
+
 // Agregar partido a la tabla (ida o local)
 function addPartidoToTable(evento) {
     // Solo agregar en ida o local
     if (evento.tipo !== 'ida' && evento.tipo !== 'local') return;
 
     const tbody = document.getElementById('partidos-body');
-    let rival, resultado, vehiculoHtml;
+    let rivalCodigo, rival, resultado, iconoHtml;
 
     if (evento.tipo === 'local') {
         // Partido de local
-        rival = ESTADIOS[evento.rival];
+        rivalCodigo = evento.rival;
+        rival = ESTADIOS[rivalCodigo];
         resultado = evento.resultado;
-        vehiculoHtml = '<span class="local-icon">L</span>';
+        iconoHtml = '<span class="local-icon">L</span>';
     } else {
         // Viaje de ida (visitante)
-        rival = ESTADIOS[evento.hacia];
+        rivalCodigo = evento.hacia;
+        rival = ESTADIOS[rivalCodigo];
         // Buscar resultado del viaje de vuelta correspondiente
         const viajeVuelta = viajesData.find(v =>
             v.tipo === 'vuelta' && v.fechaNum === evento.fechaNum && v.torneo === evento.torneo
         );
         resultado = viajeVuelta?.resultado || 'empate';
         const vehiculoImg = imgPath + (evento.distanciaKm >= 200 ? 'avion.jpeg' : 'bus-icon-vector.jpg');
-        vehiculoHtml = `<img src="${vehiculoImg}" class="vehiculo-icon">`;
+        iconoHtml = `<img src="${vehiculoImg}" class="vehiculo-icon">`;
     }
+
+    // Escudo del rival
+    const escudoRival = `/img/escudos/${rivalCodigo}.${getEscudoExt(rivalCodigo)}`;
 
     // Actualizar estadisticas
     addStat(evento, resultado);
@@ -451,9 +464,9 @@ function addPartidoToTable(evento) {
         <td>${evento.fecha}</td>
         <td>${evento.torneo}</td>
         <td>${evento.fechaNum}</td>
-        <td>${rival.nombreCorto}</td>
+        <td><img src="${escudoRival}" class="escudo-mini" alt="${rival.nombreCorto}"></td>
         <td>${resLetra}</td>
-        <td>${vehiculoHtml}</td>
+        <td>${iconoHtml}</td>
     `;
 
     tbody.appendChild(tr);
@@ -700,9 +713,6 @@ function startViajesSequence() {
         });
     }
 }
-
-// Escudos con extension webp
-const escudosWebp = ['CCO', 'EST', 'ROS', 'TAL'];
 
 // Funcion principal
 function iniciarVisualizacion(equipoCodigo, viajes) {

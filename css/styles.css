@@ -244,6 +244,13 @@ h1 {
     vertical-align: middle;
 }
 
+.escudo-mini {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
 .local-icon {
     display: inline-block;
     width: 18px;
