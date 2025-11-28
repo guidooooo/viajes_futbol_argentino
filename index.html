@@ -16,6 +16,10 @@
         </div>
     </div>
 
+    <div class="signature">
+        <img src="/img/signature.png" alt="Firma">
+    </div>
+
     <script type="module">
         import { ESTADIOS } from '/js/data/estadios.js';
 
@@ -24,21 +28,36 @@
 
         const grid = document.getElementById('equipos-grid');
 
-        // Ordenar por nombre corto
-        const equipos = Object.entries(ESTADIOS)
-            .sort((a, b) => a[1].nombreCorto.localeCompare(b[1].nombreCorto));
+        // Cargar viajes para calcular km totales
+        fetch('/js/data/viajes.json')
+            .then(res => res.json())
+            .then(viajes => {
+                // Calcular km por equipo (ida + vuelta = distancia * 2 por viaje)
+                const kmPorEquipo = {};
+                Object.entries(viajes).forEach(([codigo, eventos]) => {
+                    kmPorEquipo[codigo] = eventos
+                        .filter(e => e.tipo === 'ida')
+                        .reduce((sum, e) => sum + (e.distanciaKm * 2), 0);
+                });
 
-        equipos.forEach(([codigo, datos]) => {
-            const ext = escudosWebp.includes(codigo) ? 'webp' : 'png';
-            const card = document.createElement('a');
-            card.href = `/equipo/${codigo}`;
-            card.className = 'equipo-card';
-            card.innerHTML = `
-                <img src="/img/escudos/${codigo}.${ext}" alt="${datos.nombreCorto}" class="escudo">
-                <span class="nombre">${datos.nombreCorto}</span>
-            `;
-            grid.appendChild(card);
-        });
+                // Ordenar por nombre corto
+                const equipos = Object.entries(ESTADIOS)
+                    .sort((a, b) => a[1].nombreCorto.localeCompare(b[1].nombreCorto));
+
+                equipos.forEach(([codigo, datos]) => {
+                    const ext = escudosWebp.includes(codigo) ? 'webp' : 'png';
+                    const km = Math.round(kmPorEquipo[codigo] || 0).toLocaleString('es-AR');
+                    const card = document.createElement('a');
+                    card.href = `/equipo/${codigo}`;
+                    card.className = 'equipo-card';
+                    card.innerHTML = `
+                        <img src="/img/escudos/${codigo}.${ext}" alt="${datos.nombreCorto}" class="escudo">
+                        <span class="nombre">${datos.nombreCorto}</span>
+                        <span class="km-total">${km} km</span>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
     </script>
 </body>
 </html>

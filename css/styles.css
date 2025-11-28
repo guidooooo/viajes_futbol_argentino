@@ -73,6 +73,12 @@ h1 {
     text-align: center;
 }
 
+.equipo-card .km-total {
+    font-size: 0.75rem;
+    color: #00ccff;
+    margin-top: 0.25rem;
+}
+
 /* Equipo - Visualizacion 3D */
 .globe-container {
     position: fixed;
@@ -361,3 +367,21 @@ h1 {
     color: #fff;
 }
 
+/* Firma/Logo */
+.signature {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 100;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.signature:hover {
+    opacity: 1;
+}
+
+.signature img {
+    height: 40px;
+    width: auto;
+}

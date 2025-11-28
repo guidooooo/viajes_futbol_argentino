@@ -106,8 +106,28 @@ textureLoader.load(imgPath + 'home.png', (texture) => {
     homeTexture = texture;
 });
 
-// Crear vehiculo (sprite con imagen: bus < 200km, avion >= 200km)
-function createVehicle(color, distanciaKm) {
+// Cache de texturas de escudos
+const escudoTextures = {};
+
+// Cargar textura de escudo (con cache)
+function loadEscudoTexture(codigo) {
+    if (escudoTextures[codigo]) {
+        return Promise.resolve(escudoTextures[codigo]);
+    }
+    return new Promise((resolve) => {
+        const ext = getEscudoExt(codigo);
+        textureLoader.load(`/img/escudos/${codigo}.${ext}`, (texture) => {
+            escudoTextures[codigo] = texture;
+            resolve(texture);
+        });
+    });
+}
+
+// Crear vehiculo (sprite con imagen: bus < 200km, avion >= 200km) + escudo rival
+function createVehicle(color, distanciaKm, rivalCodigo) {
+    const group = new THREE.Group();
+
+    // Sprite del vehiculo
     const texture = distanciaKm < 200 ? busTexture : planeTexture;
     const material = new THREE.SpriteMaterial({
         map: texture,
@@ -115,15 +135,28 @@ function createVehicle(color, distanciaKm) {
         sizeAttenuation: true,
         transparent: true
     });
+    const vehicleSprite = new THREE.Sprite(material);
+    vehicleSprite.scale.set(CONFIG.planeSize * 2, CONFIG.planeSize * 2, 1);
+    group.add(vehicleSprite);
 
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(CONFIG.planeSize * 2, CONFIG.planeSize * 2, 1);
+    // Sprite del escudo rival (debajo del vehiculo)
+    if (rivalCodigo && escudoTextures[rivalCodigo]) {
+        const escudoMaterial = new THREE.SpriteMaterial({
+            map: escudoTextures[rivalCodigo],
+            sizeAttenuation: true,
+            transparent: true
+        });
+        const escudoSprite = new THREE.Sprite(escudoMaterial);
+        escudoSprite.scale.set(CONFIG.planeSize * 1.5, CONFIG.planeSize * 1.5, 1);
+        escudoSprite.position.set(0, -CONFIG.planeSize * 1.8, 0);
+        group.add(escudoSprite);
+    }
 
-    return sprite;
+    return group;
 }
 
-// Mostrar icono de casa sobre el estadio local
-function showHomeIcon(resultado) {
+// Mostrar icono de casa sobre el estadio local + escudo rival
+function showHomeIcon(resultado, rivalCodigo) {
     if (!homeTexture || !equipoLocalCodigo) return;
 
     const equipo = ESTADIOS[equipoLocalCodigo];
@@ -135,19 +168,35 @@ function showHomeIcon(resultado) {
     else if (resultado === 'empate') color = 0xffcc00;
     else color = 0xff3333;
 
-    const material = new THREE.SpriteMaterial({
+    const group = new THREE.Group();
+    group.position.copy(pos);
+
+    // Sprite de la casa
+    const homeMaterial = new THREE.SpriteMaterial({
         map: homeTexture,
         color: color,
         sizeAttenuation: true,
         transparent: true
     });
+    const homeSprite = new THREE.Sprite(homeMaterial);
+    homeSprite.scale.set(CONFIG.planeSize * 3, CONFIG.planeSize * 3, 1);
+    group.add(homeSprite);
 
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(CONFIG.planeSize * 3, CONFIG.planeSize * 3, 1);
-    sprite.position.copy(pos);
+    // Sprite del escudo rival (debajo de la casa)
+    if (rivalCodigo && escudoTextures[rivalCodigo]) {
+        const escudoMaterial = new THREE.SpriteMaterial({
+            map: escudoTextures[rivalCodigo],
+            sizeAttenuation: true,
+            transparent: true
+        });
+        const escudoSprite = new THREE.Sprite(escudoMaterial);
+        escudoSprite.scale.set(CONFIG.planeSize * 1.5, CONFIG.planeSize * 1.5, 1);
+        escudoSprite.position.set(0, -CONFIG.planeSize * 2.2, 0);
+        group.add(escudoSprite);
+    }
 
-    scene.add(sprite);
-    currentHomeIcon = sprite;
+    scene.add(group);
+    currentHomeIcon = group;
 }
 
 // Ocultar icono de casa
@@ -159,7 +208,7 @@ function hideHomeIcon() {
 }
 
 // Crear arco con animacion progresiva y vehiculo
-function createAnimatedArc(start, end, color, distanciaKm, onComplete) {
+function createAnimatedArc(start, end, color, distanciaKm, rivalCodigo, onComplete) {
     const startVec = latLonToVector3(start.lat, start.lon, CONFIG.globeRadius + CONFIG.pinHeight);
     const endVec = latLonToVector3(end.lat, end.lon, CONFIG.globeRadius + CONFIG.pinHeight);
 
@@ -186,8 +235,8 @@ function createAnimatedArc(start, end, color, distanciaKm, onComplete) {
     const line = new THREE.Line(geometry, material);
     scene.add(line);
 
-    // Crear vehiculo (bus o avion segun distancia)
-    const vehicle = createVehicle(color, distanciaKm);
+    // Crear vehiculo (bus o avion segun distancia) + escudo rival
+    const vehicle = createVehicle(color, distanciaKm, rivalCodigo);
     scene.add(vehicle);
     currentVehicle = vehicle;
 
@@ -326,20 +375,27 @@ function addEstadiosPins(equipoCodigo) {
 }
 
 // Animar viaje
-function animateViaje(viaje, onComplete) {
+async function animateViaje(viaje, onComplete) {
     const desde = ESTADIOS[viaje.desde];
     const hacia = ESTADIOS[viaje.hacia];
     const color = getColorByViaje(viaje);
 
+    // El rival es hacia en ida, desde en vuelta
+    const rivalCodigo = viaje.tipo === 'ida' ? viaje.hacia : viaje.desde;
+
+    // Precargar escudo del rival
+    await loadEscudoTexture(rivalCodigo);
+
     // Actualizar UI
     updateViajeInfo(viaje);
 
-    // Crear arco animado
+    // Crear arco animado con escudo del rival
     createAnimatedArc(
         { lat: desde.lat, lon: desde.lon },
         { lat: hacia.lat, lon: hacia.lon },
         color,
         viaje.distanciaKm,
+        rivalCodigo,
         () => {
             // Agregar a tabla al llegar a destino en la ida
             if (viaje.tipo === 'ida') {
@@ -695,10 +751,13 @@ function startViajesSequence() {
     updateControlButtons();
 
     if (evento.tipo === 'local') {
-        // Partido de local: mostrar icono, agregar a tabla y esperar 2s
+        // Partido de local: mostrar icono + escudo rival, agregar a tabla y esperar 2s
         updateLocalInfo(evento);
         addPartidoToTable(evento);
-        showHomeIcon(evento.resultado);
+        // Precargar escudo y mostrar
+        loadEscudoTexture(evento.rival).then(() => {
+            showHomeIcon(evento.resultado, evento.rival);
+        });
         pendingTimeout = setTimeout(() => {
             hideHomeIcon();
             pendingTimeout = null;
