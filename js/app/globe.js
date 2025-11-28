@@ -701,6 +701,9 @@ function startViajesSequence() {
     }
 }
 
+// Escudos con extension webp
+const escudosWebp = ['CCO', 'EST', 'ROS', 'TAL'];
+
 // Funcion principal
 function iniciarVisualizacion(equipoCodigo, viajes) {
     viajesData = viajes;
@@ -708,7 +711,14 @@ function iniciarVisualizacion(equipoCodigo, viajes) {
 
     const equipo = ESTADIOS[equipoCodigo];
     document.title = `Viajes - ${equipo.nombreCorto}`;
-    document.getElementById('equipo-nombre').textContent = equipo.nombreCorto;
+
+    // Mostrar escudo
+    const ext = escudosWebp.includes(equipoCodigo) ? 'webp' : 'png';
+    const escudoImg = document.getElementById('equipo-escudo');
+    escudoImg.src = `/img/escudos/${equipoCodigo}.${ext}`;
+    escudoImg.alt = equipo.nombreCorto;
+    escudoImg.style.display = 'block';
+
     document.getElementById('total-viajes').textContent = viajes.length;
 
     const distanciaTotal = viajes.reduce((sum, v) => sum + (v.distanciaKm || 0), 0);
@@ -729,17 +739,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const pathParts = window.location.pathname.split('/');
     const equipoCodigo = pathParts[pathParts.length - 1];
 
+    const showError = (msg) => {
+        const errorEl = document.getElementById('equipo-error');
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+    };
+
     fetch('/js/data/viajes.json')
         .then(res => res.json())
         .then(viajes => {
             if (viajes[equipoCodigo]) {
                 iniciarVisualizacion(equipoCodigo, viajes[equipoCodigo]);
             } else {
-                document.getElementById('equipo-nombre').textContent = 'Equipo no encontrado';
+                showError('Equipo no encontrado');
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            document.getElementById('equipo-nombre').textContent = 'Error cargando datos';
+            showError('Error cargando datos');
         });
 });

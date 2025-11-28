@@ -19,6 +19,9 @@
     <script type="module">
         import { ESTADIOS } from '/js/data/estadios.js';
 
+        // Escudos con extension webp
+        const escudosWebp = ['CCO', 'EST', 'ROS', 'TAL'];
+
         const grid = document.getElementById('equipos-grid');
 
         // Ordenar por nombre corto
@@ -26,13 +29,13 @@
             .sort((a, b) => a[1].nombreCorto.localeCompare(b[1].nombreCorto));
 
         equipos.forEach(([codigo, datos]) => {
+            const ext = escudosWebp.includes(codigo) ? 'webp' : 'png';
             const card = document.createElement('a');
             card.href = `/equipo/${codigo}`;
             card.className = 'equipo-card';
             card.innerHTML = `
-                <span class="codigo">${codigo}</span>
+                <img src="/img/escudos/${codigo}.${ext}" alt="${datos.nombreCorto}" class="escudo">
                 <span class="nombre">${datos.nombreCorto}</span>
-                <span class="ciudad">${datos.ciudad}</span>
             `;
             grid.appendChild(card);
         });
